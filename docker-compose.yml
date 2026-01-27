@@ -1,0 +1,83 @@
+version: '3.8'
+services:
+  # Databases
+  mysql_db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: college_db
+    ports:
+      - "3306:3306"
+    networks:
+      - college-net
+
+  mongo_db:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+      - college-net
+
+  neo4j_db:
+    image: neo4j:latest
+    environment:
+      NEO4J_AUTH: neo4j/password
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    networks:
+      - college-net
+
+  # Message Broker
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - college-net
+
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    networks:
+      - college-net
+    depends_on:
+      - zookeeper
+
+  # Node.js Main App
+  api_gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql_db
+      - mongo_db
+      - kafka
+    environment:
+      DB_HOST: mysql_db
+      MONGO_URL: mongodb://mongo_db:27017/college_data
+      KAFKA_BROKER: kafka:9092
+    networks:
+      - college-net
+
+  # Python Analytics Engine
+  analytics_engine:
+    build: ./analytics-engine
+    depends_on:
+      - kafka
+      - neo4j_db
+    environment:
+      NEO4J_URI: bolt://neo4j_db:7687
+      KAFKA_BROKER: kafka:9092
+    networks:
+      - college-net
+
+networks:
+  college-net:
+    driver: bridge

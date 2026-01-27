@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Dashboard | CollegeConnect</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f3f4f6; font-family: 'Inter', sans-serif; color: #1f2937; }
+        .navbar { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 1rem 0; }
+        .navbar-brand { font-weight: 700; color: #764ba2; font-size: 1.5rem; }
+        .nav-user { font-weight: 500; color: #4b5563; }
+        .main-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .card-post {
+            background: white; border: none; border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: sticky; top: 2rem;
+        }
+        .listing-card {
+            background: white; border: none; border-radius: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 1.5rem;
+            border: 1px solid #f3f4f6;
+            overflow: hidden;
+        }
+        .listing-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        .badge-cat { font-size: 0.75rem; padding: 0.4em 0.8em; border-radius: 50px; text-transform: uppercase; }
+        .bg-marketplace { background-color: #e0e7ff; color: #4338ca; }
+        .bg-jobs { background-color: #d1fae5; color: #065f46; }
+        .bg-cooking { background-color: #ffedd5; color: #9a3412; }
+        .bg-transport { background-color: #fee2e2; color: #991b1b; }
+        .price-tag { font-size: 1.25rem; font-weight: 700; color: #111827; }
+        .btn-chat { background-color: #f3f4f6; color: #1f2937; border: none; font-weight: 500; transition: 0.2s; }
+        .btn-chat:hover { background-color: #e5e7eb; color: #111827; }
+        
+        /* New Image Styles */
+        .listing-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid #f3f4f6;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container-fluid main-container my-0">
+        <a class="navbar-brand" href="#"><i class="bi bi-mortarboard-fill me-2"></i>CollegeConnect</a>
+        <div class="d-flex align-items-center gap-3">
+            <a href="/inbox" class="btn btn-outline-primary rounded-pill px-4 btn-sm"><i class="bi bi-chat-dots-fill me-2"></i>Inbox</a>
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                    <i class="bi bi-person-fill text-muted"></i>
+                </div>
+                <span class="nav-user"><%= user %></span>
+                <span class="badge bg-secondary rounded-pill ms-1" style="font-size: 0.7em;"><%= role %></span>
+            </div>
+            <% if(role === 'Admin') { %> <a href="/admin/users" class="btn btn-warning btn-sm rounded-pill px-3">Admin</a> <% } %>
+            <a href="/logout" class="text-danger ms-2" title="Logout"><i class="bi bi-box-arrow-right fs-5"></i></a>
+        </div>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card-post p-4">
+                <h5 class="fw-bold mb-3">✨ Post a Service</h5>
+                <form action="/post-listing" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">TITLE</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Calculus Tutor" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">IMAGE (Optional)</label>
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted small fw-bold">CATEGORY</label>
+                            <select name="category" class="form-select">
+                                <option value="Marketplace">Marketplace</option>
+                                <option value="Jobs">Jobs</option>
+                                <option value="Cooking">Cooking</option>
+                                <option value="Transport">Transport</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small fw-bold">PRICE ($)</label>
+                            <input type="number" name="price" class="form-control" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">DESCRIPTION</label>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Describe details..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-3" style="background: #764ba2; border:none;">Publish Post</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <h5 class="fw-bold text-muted mb-4">Latest Community Listings</h5>
+            <% if(listings.length === 0) { %>
+                <div class="text-center py-5 text-muted"><p>No listings yet. Be the first to post!</p></div>
+            <% } %>
+
+            <% listings.reverse().forEach(function(item){ %>
+                <div class="card listing-card shadow-sm">
+                    <% if(item.image) { %>
+                        <img src="<%= item.image %>" class="listing-img" alt="Listing Image">
+                    <% } else { %>
+                        <div style="height: 6px; background: linear-gradient(90deg, #667eea, #764ba2);"></div>
+                    <% } %>
+
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-secondary mb-2"><%= item.category %></span>
+                                <h4 class="card-title fw-bold mb-0"><%= item.title %></h4>
+                            </div>
+                            <div class="price-tag">$<%= item.price %></div>
+                        </div>
+                        <p class="text-muted mb-4"><%= item.description %></p>
+                        
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-muted" style="width: 30px; height: 30px;">
+                                    <%= item.postedBy.charAt(0).toUpperCase() %>
+                                </div>
+                                <span class="small text-muted">Posted by <strong><%= item.postedBy %></strong></span>
+                            </div>
+                            <% if (user !== item.postedBy) { %>
+                                <% 
+                                    let p1 = user < item.postedBy ? user : item.postedBy;
+                                    let p2 = user < item.postedBy ? item.postedBy : user;
+                                    let roomID = item._id + "_" + p1 + "_" + p2;
+                                %>
+                                <a href="/chat?room=<%= roomID %>&withUser=<%= item.postedBy %>" class="btn btn-chat btn-sm rounded-pill px-3">
+                                    <i class="bi bi-chat-text-fill me-1"></i> Message Seller
+                                </a>
+                            <% } else { %>
+                                <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill">You Posted This</span>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</div>
+</body>
+</html>
