@@ -157,6 +157,25 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
         res.redirect('/dashboard');
     });
 
+
+   
+
+    // Delete Listing Route
+    app.post('/delete-listing/:id', requireLogin, async (req, res) => {
+        try {
+            const listing = await Listing.findById(req.params.id);
+            // Security Check: Ensure the logged-in user is the owner
+            if (listing && listing.postedBy === req.session.username) {
+                await Listing.findByIdAndDelete(req.params.id);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+        res.redirect('/dashboard');
+    });
+
+   
+
     // Chat Room
     app.get('/chat', requireLogin, async (req, res) => {
         const { room, withUser } = req.query;

@@ -66,6 +66,10 @@ services:
     networks:
       - college-net
 
+    volumes:
+      - ./api-gateway:/usr/src/app
+      - /usr/src/app/node_modules
+
   # Python Analytics Engine
   analytics_engine:
     build: ./analytics-engine
@@ -81,3 +85,5 @@ services:
 networks:
   college-net:
     driver: bridge
+
+
